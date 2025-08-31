@@ -386,13 +386,8 @@ def build_report_pdf(image_bytes: bytes,
 
         return pdf_bytes, {
             "tumor_type": tumor_type,
-<<<<<<< HEAD
             "tumor_size": tumor_size,
             "gemini_summary": narrative_summary
-=======
-            "tumor_size": tumor_size
-
->>>>>>> 309c845375c8bba15efb2a7681aa10482766af0f
         }
 
     finally:
