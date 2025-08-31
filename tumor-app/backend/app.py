@@ -4,7 +4,7 @@ import mysql.connector
 from datetime import datetime
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
-from report_generator import build_report_pdf
+from report_generator import build_report_pdf, build_summary_pdf
 import google.generativeai as genai
 
 app = Flask(__name__)
@@ -208,7 +208,7 @@ def login():
 from flask import Flask, request, jsonify, send_file
 import mysql.connector
 import io, zipfile
-from datetime import datetime
+# from datetime import datetime
 @app.route("/predict", methods=["POST"])
 def predict():
     if "image" not in request.files:
