@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - Brain Tumor Report</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 12px;
+      width: 400px;
+      box-shadow: 0px 0px 12px rgba(0,0,0,0.5);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #1db954;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #14833b;
+    }
+    p {
+      text-align: center;
+      margin-top: 15px;
+    }
+    a {
+      color: #1db954;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📝 Register</h2>
+    <form id="registerForm">
+      <label for="patient_id">Patient ID</label>
+      <input type="text" id="patient_id" placeholder="Enter Patient ID" required>
+
+      <label for="name">Name</label>
+      <input type="text" id="name" placeholder="Enter your full name" required>
+
+      <label for="age">Age</label>
+      <input type="number" id="age" placeholder="Enter age" required>
+
+      <label for="sex">Sex</label>
+      <select id="sex" required>
+        <option value="">-- Select --</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Choose a password" required>
+
+      <button type="submit">Register</button>
+    </form>
+    <p>Already registered? <a href="login.html">Login here</a></p>
+  </div>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const sex = document.getElementById("sex").value;
+      if (!sex) {
+        alert("⚠️ Please select your sex.");
+        return;
+      }
+
+      const payload = {
+        patient_id: document.getElementById("patient_id").value.trim(),
+        name: document.getElementById("name").value.trim(),
+        age: document.getElementById("age").value,
+        sex: sex,
+        password: document.getElementById("password").value
+      };
+
+      try {
+        const res = await fetch("http://127.0.0.1:5000/register", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("✅ Registration successful! Please login.");
+          window.location.href = "login.html";
+        } else {
+          alert("❌ " + data.error);
+        }
+      } catch (err) {
+        alert("⚠️ Server error. Please try again later.");
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

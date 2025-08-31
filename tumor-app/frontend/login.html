@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Brain Tumor Report</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.85);
+      padding: 30px;
+      border-radius: 12px;
+      width: 350px;
+      box-shadow: 0px 0px 12px rgba(0,0,0,0.5);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #1db954;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #14833b;
+    }
+    p {
+      text-align: center;
+      margin-top: 15px;
+    }
+    a {
+      color: #1db954;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔑 Login</h2>
+    <form id="loginForm">
+      <label for="patient_id">Patient ID</label>
+      <input type="text" id="patient_id" placeholder="Enter Patient ID" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter Password" required>
+
+      <button type="submit">Login</button>
+    </form>
+    <p>New user? <a href="register.html">Register here</a></p>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        patient_id: document.getElementById("patient_id").value.trim(),
+        password: document.getElementById("password").value
+      };
+
+      try {
+        const res = await fetch("http://127.0.0.1:5000/login", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("✅ Login successful!");
+          // Save patient_id for later use
+          localStorage.setItem("patient_id", payload.patient_id);
+          window.location.href = "index.html"; // redirect to main page
+        } else {
+          alert("❌ " + data.error);
+        }
+      } catch (err) {
+        alert("⚠️ Server error. Please try again later.");
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
