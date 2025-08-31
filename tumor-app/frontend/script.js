@@ -227,6 +227,7 @@ if (predictBtn) {
       // 🔹 Unpack ZIP from backend
       const blob = await resp.blob();
       const zip = await JSZip.loadAsync(blob);
+    
 
       // Save file Blobs for download
       const reportBlob = await zip.file(/Report.*\.pdf$/i)[0].async("blob");
