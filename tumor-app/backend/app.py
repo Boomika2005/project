@@ -5,7 +5,11 @@ import mysql.connector
 from datetime import datetime
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
+<<<<<<< HEAD
+from report_generator import build_report_pdf, build_summary_pdf
+=======
 
+>>>>>>> 7f7faeaab51b27a997c6bd0346618f4f92cfb5a9
 import google.generativeai as genai
 from flask import Flask, request, jsonify, send_file
 import mysql.connector
@@ -209,8 +213,15 @@ def login():
 #         download_name=report_filename,
 #     )
 
+<<<<<<< HEAD
+from flask import Flask, request, jsonify, send_file
+import mysql.connector
+import io, zipfile
+# from datetime import datetime
+=======
 
 
+>>>>>>> 7f7faeaab51b27a997c6bd0346618f4f92cfb5a9
 @app.route("/predict", methods=["POST"])
 def predict():
     if "image" not in request.files:

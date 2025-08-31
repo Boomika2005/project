@@ -11,12 +11,13 @@ import cv2
 from skimage import io as skio, measure, morphology
 import tensorflow as tf
 import keras
+import io
 
 
 import numpy as np
 import mysql.connector
 from flask import Flask, request, jsonify, send_file
-from skimage import io as skio, morphology
+
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import A4
@@ -413,10 +414,19 @@ def render_pdf_bytes(facts: dict, overlay_path: Path | None) -> bytes:
     m = 15 * mm
     y = H - m
 
+<<<<<<< HEAD
     # Title
     c.setFont("Helvetica-Bold", 16)
     c.drawString(m, y, "MRI Brain – AI-Assisted Pre-Report")
     y -= 10 * mm
+=======
+    # Results
+    # story.append(Paragraph(f"Result Summary: {facts['result_summary']}", styles["Normal"]))
+    story.append(Paragraph(f"Tumor Type: {facts['tumor_type']}", styles["Normal"]))
+    story.append(Paragraph(f"Tumor Size: {facts['tumor_size']} px", styles["Normal"]))
+    story.append(Paragraph(f"MRI Plane: {facts['plane']}", styles["Normal"]))
+    story.append(Spacer(1, 12))
+>>>>>>> b6066d8c2afde65a58e54b06212807a43598c07e
 
     # Patient info
     c.setFont("Helvetica", 10)
