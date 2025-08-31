@@ -17,6 +17,12 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader
 
+import google.generativeai as genai
+
+API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
+genai.configure(api_key=API_KEY)
+gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+
 # ---------------------- CONFIG ----------------------
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", "./models")).resolve()
 
@@ -202,6 +208,86 @@ def render_pdf_bytes(facts: dict, overlay_img_path: Path) -> bytes:
     return buf.read()
 
 # ----------------- MAIN ENTRYPOINT ------------------
+# def build_report_pdf(image_bytes: bytes,
+#                      result_summary: str,
+#                      patient_id: str="Unknown",
+#                      patient_name: str="NA",
+#                      patient_age: str="NA",
+#                      patient_sex: str="NA") -> tuple[bytes, dict]:
+#     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+#         tmp.write(image_bytes)
+#         tmp_path = Path(tmp.name)
+#     try:
+#         seg_model, cls_model, plane_model = load_models()
+
+#         # Segmentation
+#         img_gray = load_image_gray_from_path(tmp_path)
+#         mask = infer_mask_from_unet(seg_model, img_gray,
+#                                     seg_output_channel=SEG_OUTPUT_CHANNEL_TUMOR,
+#                                     thresh=0.5)
+#         mask = morphology.remove_small_objects(mask.astype(bool), min_size=25).astype(np.uint8)
+
+#         # Classification (tumor type)
+#         classification = classify_with_vgg(cls_model, tmp_path, CLASS_NAMES, CLS_INPUT_SIZE)
+#         tumor_type = classification["predicted_label"]
+
+#         # ✅ Ensure tumor_type is mapped correctly
+#         if tumor_type.startswith("class_"):
+#             idx = int(tumor_type.split("_")[1])
+#             if idx < len(CLASS_NAMES):
+#                 tumor_type = CLASS_NAMES[idx]
+
+#         # Plane
+#         plane = classify_plane(plane_model, tmp_path, PLANE_NAMES, PLANE_INPUT_SIZE)
+
+#         # Tumor size
+#         findings = compute_mask_metrics(img_gray, mask)
+#         tumor_size = findings["area_px"]
+
+#         # Collect facts
+#         facts = {
+#             "case_id": str(uuid.uuid4())[:8],
+#             "patient": {
+#                 "patient_id": patient_id,
+#                 "name": patient_name,
+#                 "age": patient_age,
+#                 "sex": patient_sex
+#             },
+#             "study": {"modality": "MRI",
+#                       "study_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
+#             "classification": classification,
+#             "plane": plane,
+#             "findings_extracted": findings,
+#             "quality_flags": {
+#                 "mask_empty": mask.sum() == 0,
+#                 "image_nan": bool(np.isnan(img_gray).any())
+#             },
+#             "result_summary": result_summary,
+#             "tumor_type": tumor_type,
+#             "tumor_size": tumor_size
+#         }
+
+#         if facts["quality_flags"]["image_nan"]:
+#             raise ValueError("Image contains NaNs.")
+
+#         # Overlay
+#         overlay = overlay_mask(img_gray, mask, alpha=0.35)
+#         with tempfile.NamedTemporaryFile(suffix="_overlay.png", delete=False) as ov:
+#             ov_path = Path(ov.name)
+#             skio.imsave(str(ov_path), overlay)
+
+#         pdf_bytes = render_pdf_bytes(facts, ov_path)
+#         ov_path.unlink(missing_ok=True)
+
+#         # return both PDF and metadata
+#         return pdf_bytes, {
+#             "tumor_type": tumor_type,
+#             "tumor_size": tumor_size
+#         }
+
+#     finally:
+#         tmp_path.unlink(missing_ok=True)
+
 def build_report_pdf(image_bytes: bytes,
                      result_summary: str,
                      patient_id: str="Unknown",
@@ -225,20 +311,20 @@ def build_report_pdf(image_bytes: bytes,
         classification = classify_with_vgg(cls_model, tmp_path, CLASS_NAMES, CLS_INPUT_SIZE)
         tumor_type = classification["predicted_label"]
 
-        # ✅ Ensure tumor_type is mapped correctly
+        # ✅ Map back from class index if needed
         if tumor_type.startswith("class_"):
             idx = int(tumor_type.split("_")[1])
             if idx < len(CLASS_NAMES):
                 tumor_type = CLASS_NAMES[idx]
 
-        # Plane
+        # Plane classification
         plane = classify_plane(plane_model, tmp_path, PLANE_NAMES, PLANE_INPUT_SIZE)
 
         # Tumor size
         findings = compute_mask_metrics(img_gray, mask)
         tumor_size = findings["area_px"]
 
-        # Collect facts
+        # Collect structured facts
         facts = {
             "case_id": str(uuid.uuid4())[:8],
             "patient": {
@@ -247,8 +333,10 @@ def build_report_pdf(image_bytes: bytes,
                 "age": patient_age,
                 "sex": patient_sex
             },
-            "study": {"modality": "MRI",
-                      "study_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
+            "study": {
+                "modality": "MRI",
+                "study_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            },
             "classification": classification,
             "plane": plane,
             "findings_extracted": findings,
@@ -264,19 +352,41 @@ def build_report_pdf(image_bytes: bytes,
         if facts["quality_flags"]["image_nan"]:
             raise ValueError("Image contains NaNs.")
 
-        # Overlay
+        # ✅ Generate narrative summary using Gemini
+        prompt = f"""
+        Generate a clear, medically-oriented but patient-friendly report summary 
+        for the following brain MRI findings:
+
+        Patient ID: {patient_id}
+        Name: {patient_name}
+        Age: {patient_age}, Sex: {patient_sex}
+        Tumor Type: {tumor_type}
+        Tumor Size (px area): {tumor_size}
+        MRI Plane: {plane}
+        Extracted Findings: {findings}
+        AI Result Summary: {result_summary}
+
+        Please summarize in a professional radiology style (2-3 paragraphs).
+        """
+        gemini_response = gemini_model.generate_content(prompt)
+        narrative_summary = gemini_response.text.strip()
+
+        # Overlay with tumor mask
         overlay = overlay_mask(img_gray, mask, alpha=0.35)
         with tempfile.NamedTemporaryFile(suffix="_overlay.png", delete=False) as ov:
             ov_path = Path(ov.name)
             skio.imsave(str(ov_path), overlay)
 
+        # ✅ Merge Gemini summary into PDF facts
+        facts["gemini_summary"] = narrative_summary
+
         pdf_bytes = render_pdf_bytes(facts, ov_path)
         ov_path.unlink(missing_ok=True)
 
-        # return both PDF and metadata
         return pdf_bytes, {
             "tumor_type": tumor_type,
-            "tumor_size": tumor_size
+            "tumor_size": tumor_size,
+            "gemini_summary": narrative_summary
         }
 
     finally:

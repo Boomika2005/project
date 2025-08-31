@@ -178,6 +178,7 @@ def predict():
 
         tumor_type = metadata["tumor_type"]
         tumor_size = metadata["tumor_size"]
+        summary = metadata["gemini_summary"]
 
         # Save prediction into DB
         conn = mysql.connector.connect(**DB_CONFIG)
