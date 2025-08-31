@@ -26,6 +26,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader
 
+
 import google.generativeai as genai
 
 API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
@@ -403,42 +404,116 @@ def compute_mask_metrics(img_gray: np.ndarray, mask: np.ndarray):
 #         tmp_path.unlink(missing_ok=True)
 
 
-def render_pdf_bytes(facts: dict, overlay_path: Path) -> bytes:
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    styles = getSampleStyleSheet()
-    story = []
 
-    story.append(Paragraph("<b>Brain Tumor Report</b>", styles["Title"]))
-    story.append(Spacer(1, 12))
 
-    # Patient Info
-    p = facts["patient"]
-    story.append(Paragraph(f"Patient ID: {p['patient_id']}", styles["Normal"]))
-    story.append(Paragraph(f"Name: {p['name']}", styles["Normal"]))
-    story.append(Paragraph(f"Age: {p['age']}, Sex: {p['sex']}", styles["Normal"]))
-    story.append(Spacer(1, 12))
+def render_pdf_bytes(facts: dict, overlay_path: Path | None) -> bytes:
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    W, H = A4
+    m = 15 * mm
+    y = H - m
 
-    # Results
-    story.append(Paragraph(f"Result Summary: {facts['result_summary']}", styles["Normal"]))
-    story.append(Paragraph(f"Tumor Type: {facts['tumor_type']}", styles["Normal"]))
-    story.append(Paragraph(f"Tumor Size: {facts['tumor_size']} px", styles["Normal"]))
-    story.append(Paragraph(f"MRI Plane: {facts['plane']}", styles["Normal"]))
-    story.append(Spacer(1, 12))
+    # Title
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(m, y, "MRI Brain – AI-Assisted Pre-Report")
+    y -= 10 * mm
 
-    # Gemini Summary
-    story.append(Paragraph("<b>AI Narrative Summary</b>", styles["Heading2"]))
-    story.append(Paragraph(facts["gemini_summary"], styles["Normal"]))
-    story.append(Spacer(1, 12))
+    # Patient info
+    c.setFont("Helvetica", 10)
+    c.drawString(m, y,
+                 f"Patient ID: {facts['patient']['patient_id']}    "
+                 f"Name: {facts['patient']['name']}    "
+                 f"Age: {facts['patient']['age']}    "
+                 f"Sex: {facts['patient']['sex']}")
+    y -= 6 * mm
 
-    # Overlay Image
-    story.append(Paragraph("<b>Overlay Image</b>", styles["Heading2"]))
-    story.append(RLImage(str(overlay_path), width=400, height=400))
+    # Study info
+    c.drawString(m, y,
+                 f"Modality: {facts['study']['modality']}    "
+                 f"Date: {facts['study']['study_date']}")
+    y -= 10 * mm
 
-    doc.build(story)
-    pdf_bytes = buffer.getvalue()
-    buffer.close()
-    return pdf_bytes
+    # Findings
+    f = facts.get("findings_extracted", {})
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(m, y, "Findings")
+    y -= 6 * mm
+
+    c.setFont("Helvetica", 10)
+    plane_info = facts.get("plane", {})
+    predicted_plane = plane_info.get("predicted_label", "NA")
+
+    findings_lines = [
+        f"Tumor present: {f.get('tumor_present', True)}",
+        f"Tumor type (AI): {facts.get('tumor_type','NA')}",
+        f"Tumor size (px): {facts.get('tumor_size','NA')}",
+        f"Plane axis: {predicted_plane}",
+        f"Laterality: {f.get('laterality','NA')}",
+        f"Centroid: {f.get('centroid_xy','Not assessed')}"
+]
+
+    for line in findings_lines:
+        c.drawString(m, y, line)
+        y -= 5 * mm
+
+    # Impression
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(m, y, "Impression")
+    y -= 6 * mm
+
+    c.setFont("Helvetica", 10)
+    if f.get("tumor_present", True):
+        c.drawString(m, y,
+                    f"- Imaging consistent with {facts.get('tumor_type','NA')} "
+                    f"on {predicted_plane} plane.")
+
+    else:
+        c.drawString(m, y, "- No tumor signal detected.")
+    y -= 10 * mm
+
+    # AI Prediction Summary
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(m, y, "AI Prediction Summary")
+    y -= 6 * mm
+
+    c.setFont("Helvetica", 10)
+    c.drawString(m, y, facts.get("result_summary", "Not available"))
+    y -= 10 * mm
+
+    # # (Optional) Gemini Narrative
+    # if facts.get("gemini_summary"):
+    #     c.setFont("Helvetica-Bold", 12)
+    #     c.drawString(m, y, "AI Narrative Summary")
+    #     y -= 6 * mm
+    #     c.setFont("Helvetica", 10)
+    #     text = c.beginText(m, y)
+    #     text.setFont("Helvetica", 10)
+    #     for line in facts["gemini_summary"].split("\n"):
+    #         text.textLine(line)
+    #     c.drawText(text)
+    #     y = text.getY() - 6 * mm
+
+    # Overlay image (if provided)
+    if overlay_path and Path(overlay_path).exists():
+        img = skio.imread(str(overlay_path))
+        ih, iw = img.shape[:2]
+        draw_w = 120 * mm
+        draw_h = draw_w * (ih / iw)
+        if y - draw_h < m:  # new page if not enough space
+            c.showPage()
+            y = H - m
+        img_reader = ImageReader(str(overlay_path))
+        c.drawImage(img_reader, m, y - draw_h, width=draw_w, height=draw_h, mask='auto')
+        y = y - draw_h - 6 * mm
+
+    # Footer
+    c.setFont("Helvetica", 9)
+    c.drawString(m, m, "Generated automatically. Review required by radiologist.")
+
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    return buf.read()
 
 def build_summary_pdf(metadata: dict) -> bytes:
     buffer = io.BytesIO()
@@ -463,10 +538,10 @@ def build_summary_pdf(metadata: dict) -> bytes:
 # ---- Main Builder ----
 def build_report_pdf(image_bytes: bytes,
                      result_summary: str,
-                     patient_id: str="Unknown",
-                     patient_name: str="NA",
-                     patient_age: str="NA",
-                     patient_sex: str="NA") -> tuple[bytes, dict]:
+                     patient_id: str = "Unknown",
+                     patient_name: str = "NA",
+                     patient_age: str = "NA",
+                     patient_sex: str = "NA") -> tuple[bytes, dict]:
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
         tmp.write(image_bytes)
         tmp_path = Path(tmp.name)
@@ -482,17 +557,23 @@ def build_report_pdf(image_bytes: bytes,
         mask = morphology.remove_small_objects(mask.astype(bool), min_size=25).astype(np.uint8)
 
         # Classification
-        classification = classify_with_vgg(cls_model, tmp_path, ["Glioma", "Meningioma", "Pituitary"], (224, 224))
+        classification = classify_with_vgg(
+            cls_model, tmp_path,
+            ["Glioma", "Meningioma", "Pituitary"], (224, 224)
+        )
         tumor_type = classification["predicted_label"]
 
         # Plane classification
-        plane = classify_plane(plane_model, tmp_path, ["Axial", "Coronal", "Sagittal"], (224, 224))
+        plane = classify_plane(
+            plane_model, tmp_path,
+            ["Axial", "Coronal", "Sagittal"], (224, 224)
+        )
 
         # Tumor size
         findings = compute_mask_metrics(img_gray, mask)
         tumor_size = findings["area_px"]
 
-        # Narrative summary
+        # Narrative summary (Gemini)
         prompt = f"""
         Patient: {patient_name} ({patient_id}), Age {patient_age}, Sex {patient_sex}
         Tumor: {tumor_type}, Size {tumor_size}, Plane {plane}
@@ -501,22 +582,34 @@ def build_report_pdf(image_bytes: bytes,
         gemini_response = gemini_model.generate_content(prompt)
         narrative_summary = gemini_response.text.strip()
 
-        # Overlay
+        # Overlay image
         overlay = overlay_mask(img_gray, mask, alpha=0.35)
         with tempfile.NamedTemporaryFile(suffix="_overlay.png", delete=False) as ov:
             ov_path = Path(ov.name)
             skio.imsave(str(ov_path), overlay)
 
-        # Facts
+        # ✅ Facts dictionary (now includes study + findings_extracted)
         facts = {
-            "patient": {"patient_id": patient_id, "name": patient_name, "age": patient_age, "sex": patient_sex},
+            "patient": {
+                "patient_id": patient_id,
+                "name": patient_name,
+                "age": patient_age,
+                "sex": patient_sex
+            },
+            "study": {
+                "modality": "MRI",
+                "study_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            },
+            "classification": classification,
+            "plane": plane,
+            "findings_extracted": findings,
             "result_summary": result_summary,
             "tumor_type": tumor_type,
             "tumor_size": tumor_size,
-            "plane": plane,
             "gemini_summary": narrative_summary
         }
 
+        # Build PDF
         pdf_bytes = render_pdf_bytes(facts, ov_path)
         ov_path.unlink(missing_ok=True)
 
@@ -525,5 +618,6 @@ def build_report_pdf(image_bytes: bytes,
             "tumor_size": tumor_size,
             "gemini_summary": narrative_summary
         }
+
     finally:
         tmp_path.unlink(missing_ok=True)
