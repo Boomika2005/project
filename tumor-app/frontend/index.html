@@ -137,11 +137,12 @@
     });
 
     function addMessage(sender, text) {
-      const msg = document.createElement("div");
-      msg.innerHTML = `<b>${sender}:</b> ${text}`;
-      chatMessages.appendChild(msg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+  const msg = document.createElement("div");
+  msg.innerHTML = `<span style="font-weight:bold; color:black;">${sender}:</span> <span style="color:black;">${text}</span>`;
+  chatMessages.appendChild(msg);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 
     async function sendMessage() {
       const msg = userMsgInput.value.trim();
