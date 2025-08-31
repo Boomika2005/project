@@ -33,7 +33,6 @@
       position: fixed;
       inset: 0;
       background-color: rgba(0, 0, 0, 0.6);
-      display: none;
       align-items: center;
       justify-content: center;
       z-index: 2000;
@@ -159,6 +158,7 @@
     </div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+ 
   <script src="script.js"></script>
   <script>
     const feedbackBtn = document.getElementById("feedbackBtn");
@@ -175,48 +175,44 @@
       feedbackText.value = "";
     }
 
-   function submitFeedback() {
-    const feedback = feedbackText.value && feedbackText.value.trim() !== "" 
-      ? feedbackText.value.trim() 
-      : "hello";
+    function submitFeedback() {
+      const feedback = feedbackText.value && feedbackText.value.trim() !== "" 
+        ? feedbackText.value.trim() 
+        : "hello";
 
-    const patient_id = localStorage.getItem("patient_id") 
-      ? localStorage.getItem("patient_id") 
-      : "patient1";
+      const patient_id = localStorage.getItem("patient_id") 
+        ? localStorage.getItem("patient_id") 
+        : "patient1";
 
+      if (!feedback) {
+        alert("⚠ Please enter some feedback before submitting.");
+        return;
+      }
+      if (!patient_id) {
+        alert("⚠ Patient ID not found. Please log in again.");
+        return;
+      }
 
-  if (!feedback) {
-    alert("⚠ Please enter some feedback before submitting.");
-    return;
-  }
-  if (!patient_id) {
-    alert("⚠ Patient ID not found. Please log in again.");
-    return;
-  }
+      fetch('http://127.0.0.1:5000/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id: patient_id,
+          message: feedback
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("❌ " + data.error);
+        } else {
+          alert("✅ Feedback submitted successfully!");
+        }
+      })
+      .catch(err => console.error("❌ Error:", err));
 
-
-
-  
-  fetch('http://127.0.0.1:5000/feedback', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      patient_id: patient_id,
-      message: feedback
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      alert("❌ " + data.error);
-    } else {
-      alert("✅ Feedback submitted successfully!");
+      closeFeedback();
     }
-  })
-  .catch(err => console.error("❌ Error:", err));
-
-  closeFeedback();
-}
 
     // Close modal if clicked outside
     window.onclick = function(event) {

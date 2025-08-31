@@ -1,11 +1,19 @@
 # app.py
+from report_generator import build_report_pdf, build_summary_pdf
 import io
 import mysql.connector
 from datetime import datetime
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
+<<<<<<< HEAD
 from report_generator import build_report_pdf, build_summary_pdf
+=======
+
+>>>>>>> 7f7faeaab51b27a997c6bd0346618f4f92cfb5a9
 import google.generativeai as genai
+from flask import Flask, request, jsonify, send_file
+import mysql.connector
+import zipfile
 
 app = Flask(__name__)
 CORS(app)
@@ -205,10 +213,15 @@ def login():
 #         download_name=report_filename,
 #     )
 
+<<<<<<< HEAD
 from flask import Flask, request, jsonify, send_file
 import mysql.connector
 import io, zipfile
 # from datetime import datetime
+=======
+
+
+>>>>>>> 7f7faeaab51b27a997c6bd0346618f4f92cfb5a9
 @app.route("/predict", methods=["POST"])
 def predict():
     if "image" not in request.files:
@@ -226,7 +239,12 @@ def predict():
 
     try:
         # ---- Fetch patient info ----
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = mysql.connector.connect(
+              host=DB_CONFIG["host"],
+             user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+             database="tumor_app"
+        )
         cursor = conn.cursor(dictionary=True)
         cursor.execute(
             "SELECT name, age, sex FROM patients WHERE patient_id = %s",
@@ -239,7 +257,7 @@ def predict():
             return jsonify({"error": "Patient not found"}), 404
 
         result_summary = "Tumor Detected"
-        report_filename = f"Brain_Tumor_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        report_filename = f"Brain_Tumor_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
 
         pdf_bytes, metadata = build_report_pdf(
             image_bytes=image_bytes,
