@@ -5,7 +5,7 @@ from __future__ import annotations
 import os, uuid, datetime, tempfile
 from pathlib import Path
 from typing import Tuple, Optional
-
+import io
 import numpy as np
 import cv2
 from skimage import io as skio, measure, morphology

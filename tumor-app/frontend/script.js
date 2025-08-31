@@ -159,12 +159,8 @@ if (predictBtn) {
 
       // 🔹 Unpack ZIP from backend
       const blob = await resp.blob();
-<<<<<<< HEAD
-      const zip = await JSZip.loadAsync(blob); // ✅ works now (after adding CDN/import)
-=======
       const zip = await JSZip.loadAsync(blob);
     
->>>>>>> d64ddc72487ee7dc8896d289b834674940d2c3f1
 
       // Extract files
       const reportBlob     = await zip.file(/Report.*\.pdf$/i)[0].async("blob");
