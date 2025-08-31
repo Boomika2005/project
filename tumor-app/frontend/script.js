@@ -13,10 +13,9 @@ const downloadBtn = document.getElementById('downloadBtn');
 const dropZone    = document.getElementById('dropZone');
 const browseLink  = document.getElementById('browseLink');
 
-
-const downloadReportBtn = document.getElementById("downloadReportBtn");
+const downloadReportBtn     = document.getElementById("downloadReportBtn");
 const downloadSummaryPdfBtn = document.getElementById("downloadSummaryPdfBtn");
-// const downloadSummaryTxtBtn = document.getElementById("downloadSummaryTxtBtn");
+const downloadSummaryTxtBtn = document.getElementById("downloadSummaryTxtBtn"); // ✅ added back
 
 let loadedImageDataURL = null;
 let lastPdfBlobUrl = null;
@@ -126,73 +125,7 @@ if (dropZone) {
   });
 }
 
-// // ===== Call backend and get PDF =====
-// if (predictBtn) {
-//   predictBtn.addEventListener('click', async () => {
-//     const file = fileInput && fileInput.files && fileInput.files[0];
-//     if (!file) { alert('Please select an image first.'); return; }
-
-//     // 🔹 Ensure patient is logged in
-//     const patientId = localStorage.getItem("patient_id");
-//     if (!patientId) {
-//       alert("You must login first before prediction.");
-//       return;
-//     }
-
-//     predictBtn.disabled = true;
-//     const oldText = predictBtn.textContent;
-//     predictBtn.textContent = 'Predicting…';
-
-//     try {
-//       const form = new FormData();
-//       form.append('image', file);
-//       form.append('patient_id', patientId); // ✅ send patient_id
-
-//       const resp = await fetch(`${API_BASE}/predict`, {
-//         method: 'POST',
-//         body: form
-//       });
-
-//       if (!resp.ok) {
-//         const maybeJson = await resp.json().catch(()=>null);
-//         const msg = (maybeJson && maybeJson.error) ? maybeJson.error : `Server error (${resp.status})`;
-//         throw new Error(msg);
-//       }
-
-//       const blob = await resp.blob();
-//       if (lastPdfBlobUrl) URL.revokeObjectURL(lastPdfBlobUrl);
-//       lastPdfBlobUrl = URL.createObjectURL(blob);
-
-//       if (genState) genState.style.display = 'flex';
-//       if (downloadBtn) {
-//         downloadBtn.style.display = 'inline-block';
-//         downloadBtn.setAttribute('data-url', lastPdfBlobUrl);
-//       }
-//     } catch (err) {
-//       alert(`Prediction failed: ${err.message}`);
-//     } finally {
-//       predictBtn.textContent = oldText;
-//       predictBtn.disabled = false;
-//     }
-//   });
-// }
-
-// // ===== Download the returned PDF =====
-// if (downloadBtn) {
-//   downloadBtn.addEventListener('click', () => {
-//     const url = downloadBtn.getAttribute('data-url');
-//     if (!url) return;
-//     const a = document.createElement('a');
-//     a.href = url;
-//     a.download = 'Brain_Tumor_Report.pdf';
-//     document.body.appendChild(a);
-//     a.click();
-//     a.remove();
-//   });
-// }
-
-
-
+// ===== Call backend and unpack ZIP =====
 if (predictBtn) {
   predictBtn.addEventListener('click', async () => {
     const file = fileInput && fileInput.files && fileInput.files[0];
@@ -226,15 +159,15 @@ if (predictBtn) {
 
       // 🔹 Unpack ZIP from backend
       const blob = await resp.blob();
-      const zip = await JSZip.loadAsync(blob);
+      const zip = await JSZip.loadAsync(blob); // ✅ works now (after adding CDN/import)
 
-      // Save file Blobs for download
-      const reportBlob = await zip.file(/Report.*\.pdf$/i)[0].async("blob");
+      // Extract files
+      const reportBlob     = await zip.file(/Report.*\.pdf$/i)[0].async("blob");
       const summaryPdfBlob = await zip.file(/Summary.*\.pdf$/i)[0].async("blob");
       const summaryTxtBlob = await zip.file(/Summary.*\.txt$/i)[0].async("blob");
 
       // Create object URLs
-      const reportUrl = URL.createObjectURL(reportBlob);
+      const reportUrl     = URL.createObjectURL(reportBlob);
       const summaryPdfUrl = URL.createObjectURL(summaryPdfBlob);
       const summaryTxtUrl = URL.createObjectURL(summaryTxtBlob);
 
@@ -273,4 +206,4 @@ function setupDownload(btn, defaultName) {
 
 setupDownload(downloadReportBtn, "Brain_Tumor_Report.pdf");
 setupDownload(downloadSummaryPdfBtn, "Gemini_Summary.pdf");
-// setupDownload(downloadSummaryTxtBtn, "Gemini_Summary.txt");
+//setupDownload(downloadSummaryTxtBtn, "Gemini_Summary.txt"); // ✅ added back
