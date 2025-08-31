@@ -27,7 +27,7 @@ gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", "./models")).resolve()
 
 UNET_PATH  = MODEL_DIR / "unet_final.h5"
-VGG_PATH   = MODEL_DIR / "brain_tumor_model.h5"
+VGG_PATH   = MODEL_DIR / "Brain_Tumer.h5"
 PLANE_PATH = MODEL_DIR / "plane_classifier.h5"
 
 SEG_OUTPUT_CHANNEL_TUMOR: Optional[int] = None
@@ -165,6 +165,7 @@ def compute_mask_metrics(img_gray: np.ndarray, mask: np.ndarray):
 
 # ------------------- PDF RENDER ---------------------
 def render_pdf_bytes(facts: dict, overlay_img_path: Path) -> bytes:
+
     buf = tempfile.SpooledTemporaryFile(max_size=5_000_000)
     c = canvas.Canvas(buf, pagesize=A4); W,H=A4; m=15*mm; y=H-m
 
@@ -385,8 +386,13 @@ def build_report_pdf(image_bytes: bytes,
 
         return pdf_bytes, {
             "tumor_type": tumor_type,
+<<<<<<< HEAD
             "tumor_size": tumor_size,
             "gemini_summary": narrative_summary
+=======
+            "tumor_size": tumor_size
+
+>>>>>>> 309c845375c8bba15efb2a7681aa10482766af0f
         }
 
     finally:
