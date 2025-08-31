@@ -5,10 +5,21 @@ from datetime import datetime
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from report_generator import build_report_pdf
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
+model=None
+def connect():
+    global model
+    API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
+    genai.configure(api_key=API_KEY)
 
+    # Initialize Gemini model
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    print('model conneced successfully')
+
+connect()
 # -------------------- DATABASE --------------------
 DB_CONFIG = {
     "host": "localhost",
@@ -99,6 +110,8 @@ def register():
         return jsonify({"error": "Patient ID already exists"}), 400
 
 
+
+
 # -------- Login --------
 @app.route("/login", methods=["POST"])
 def login():
@@ -138,7 +151,7 @@ def predict():
 
     try:
         # Fetch patient info from DB
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = mysql.connector.connect() #need to  configure
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT name, age, sex FROM patients WHERE patient_id = %s", (patient_id,))
         patient = cursor.fetchone()
@@ -218,6 +231,27 @@ def feedback():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    
+    global model
+    print("message from frontend")
+    try:
+        data = request.json
+        user_message = data.get("message", "")
+
+        if not user_message:
+            return jsonify({"error": "Message is required"}), 400
+
+        response = model.generate_content(user_message)
+        return jsonify({"reply": response.text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 @app.route("/feedback", methods=["GET"])
 def get_feedback():
