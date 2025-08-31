@@ -12,6 +12,15 @@ from skimage import io as skio, measure, morphology
 import tensorflow as tf
 import keras
 
+
+import numpy as np
+import mysql.connector
+from flask import Flask, request, jsonify, send_file
+from skimage import io as skio, morphology
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
+
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
@@ -164,49 +173,49 @@ def compute_mask_metrics(img_gray: np.ndarray, mask: np.ndarray):
             "laterality":laterality}
 
 # ------------------- PDF RENDER ---------------------
-def render_pdf_bytes(facts: dict, overlay_img_path: Path) -> bytes:
+# def render_pdf_bytes(facts: dict, overlay_img_path: Path) -> bytes:
 
-    buf = tempfile.SpooledTemporaryFile(max_size=5_000_000)
-    c = canvas.Canvas(buf, pagesize=A4); W,H=A4; m=15*mm; y=H-m
+#     buf = tempfile.SpooledTemporaryFile(max_size=5_000_000)
+#     c = canvas.Canvas(buf, pagesize=A4); W,H=A4; m=15*mm; y=H-m
 
-    c.setFont("Helvetica-Bold",16)
-    c.drawString(m,y,"MRI Brain – AI-Assisted Pre-Report"); y-=10*mm
-    c.setFont("Helvetica",10)
-    c.drawString(m,y,f"Patient ID: {facts['patient']['patient_id']}    Name: {facts['patient']['name']}    Age: {facts['patient']['age']}    Sex: {facts['patient']['sex']}"); y-=6*mm
-    c.drawString(m,y,f"Modality: {facts['study']['modality']}    Date: {facts['study']['study_date']}"); y-=10*mm
+#     c.setFont("Helvetica-Bold",16)
+#     c.drawString(m,y,"MRI Brain – AI-Assisted Pre-Report"); y-=10*mm
+#     c.setFont("Helvetica",10)
+#     c.drawString(m,y,f"Patient ID: {facts['patient']['patient_id']}    Name: {facts['patient']['name']}    Age: {facts['patient']['age']}    Sex: {facts['patient']['sex']}"); y-=6*mm
+#     c.drawString(m,y,f"Modality: {facts['study']['modality']}    Date: {facts['study']['study_date']}"); y-=10*mm
 
-    f = facts["findings_extracted"]
-    c.setFont("Helvetica-Bold",12); c.drawString(m,y,"Findings"); y-=6*mm
-    c.setFont("Helvetica",10)
-    for L in [
-        f"Tumor present: {f['tumor_present']}",
-        f"Tumor type (AI): {facts['tumor_type']}",
-        f"Tumor size (px): {facts['tumor_size']}",
-        f"Plane axis: {facts['plane']['predicted_label']}",
-        f"Laterality: {f['laterality']}",
-        f"Centroid: {f['centroid_xy'] or 'Not assessed'}"
-    ]:
-        c.drawString(m,y,L); y-=5*mm
+#     f = facts["findings_extracted"]
+#     c.setFont("Helvetica-Bold",12); c.drawString(m,y,"Findings"); y-=6*mm
+#     c.setFont("Helvetica",10)
+#     for L in [
+#         f"Tumor present: {f['tumor_present']}",
+#         f"Tumor type (AI): {facts['tumor_type']}",
+#         f"Tumor size (px): {facts['tumor_size']}",
+#         f"Plane axis: {facts['plane']['predicted_label']}",
+#         f"Laterality: {f['laterality']}",
+#         f"Centroid: {f['centroid_xy'] or 'Not assessed'}"
+#     ]:
+#         c.drawString(m,y,L); y-=5*mm
 
-    c.setFont("Helvetica-Bold",12); c.drawString(m,y,"Impression"); y-=6*mm
-    c.setFont("Helvetica",10)
-    if f["tumor_present"]:
-        c.drawString(m,y,f"- Imaging consistent with {facts['tumor_type']} on {facts['plane']['predicted_label']} plane."); y-=5*mm
-    else:
-        c.drawString(m,y,"- No tumor signal detected."); y-=5*mm
+#     c.setFont("Helvetica-Bold",12); c.drawString(m,y,"Impression"); y-=6*mm
+#     c.setFont("Helvetica",10)
+#     if f["tumor_present"]:
+#         c.drawString(m,y,f"- Imaging consistent with {facts['tumor_type']} on {facts['plane']['predicted_label']} plane."); y-=5*mm
+#     else:
+#         c.drawString(m,y,"- No tumor signal detected."); y-=5*mm
 
-    y-=6*mm
-    c.setFont("Helvetica-Bold",12); c.drawString(m,y,"AI Prediction Summary"); y-=6*mm
-    c.setFont("Helvetica",10); c.drawString(m,y,facts.get("result_summary","Not available")); y-=10*mm
+#     y-=6*mm
+#     c.setFont("Helvetica-Bold",12); c.drawString(m,y,"AI Prediction Summary"); y-=6*mm
+#     c.setFont("Helvetica",10); c.drawString(m,y,facts.get("result_summary","Not available")); y-=10*mm
 
-    img_reader = ImageReader(str(overlay_img_path)); img = skio.imread(str(overlay_img_path)); ih,iw = img.shape[:2]
-    draw_w=120*mm; draw_h=draw_w*(ih/iw)
-    if y-draw_h<m: c.showPage(); y=H-m
-    c.drawImage(img_reader,m,y-draw_h,width=draw_w,height=draw_h,mask='auto'); y=y-draw_h-6*mm
+#     img_reader = ImageReader(str(overlay_img_path)); img = skio.imread(str(overlay_img_path)); ih,iw = img.shape[:2]
+#     draw_w=120*mm; draw_h=draw_w*(ih/iw)
+#     if y-draw_h<m: c.showPage(); y=H-m
+#     c.drawImage(img_reader,m,y-draw_h,width=draw_w,height=draw_h,mask='auto'); y=y-draw_h-6*mm
 
-    c.setFont("Helvetica",9); c.drawString(m,m,"Generated automatically. Review required by radiologist.")
-    c.showPage(); c.save(); buf.seek(0)
-    return buf.read()
+#     c.setFont("Helvetica",9); c.drawString(m,m,"Generated automatically. Review required by radiologist.")
+#     c.showPage(); c.save(); buf.seek(0)
+#     return buf.read()
 
 # ----------------- MAIN ENTRYPOINT ------------------
 # def build_report_pdf(image_bytes: bytes,
@@ -289,6 +298,169 @@ def render_pdf_bytes(facts: dict, overlay_img_path: Path) -> bytes:
 #     finally:
 #         tmp_path.unlink(missing_ok=True)
 
+# def build_report_pdf(image_bytes: bytes,
+#                      result_summary: str,
+#                      patient_id: str="Unknown",
+#                      patient_name: str="NA",
+#                      patient_age: str="NA",
+#                      patient_sex: str="NA") -> tuple[bytes, dict]:
+#     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+#         tmp.write(image_bytes)
+#         tmp_path = Path(tmp.name)
+#     try:
+#         seg_model, cls_model, plane_model = load_models()
+
+#         # Segmentation
+#         img_gray = load_image_gray_from_path(tmp_path)
+#         mask = infer_mask_from_unet(seg_model, img_gray,
+#                                     seg_output_channel=SEG_OUTPUT_CHANNEL_TUMOR,
+#                                     thresh=0.5)
+#         mask = morphology.remove_small_objects(mask.astype(bool), min_size=25).astype(np.uint8)
+
+#         # Classification (tumor type)
+#         classification = classify_with_vgg(cls_model, tmp_path, CLASS_NAMES, CLS_INPUT_SIZE)
+#         tumor_type = classification["predicted_label"]
+
+#         # ✅ Map back from class index if needed
+#         if tumor_type.startswith("class_"):
+#             idx = int(tumor_type.split("_")[1])
+#             if idx < len(CLASS_NAMES):
+#                 tumor_type = CLASS_NAMES[idx]
+
+#         # Plane classification
+#         plane = classify_plane(plane_model, tmp_path, PLANE_NAMES, PLANE_INPUT_SIZE)
+
+#         # Tumor size
+#         findings = compute_mask_metrics(img_gray, mask)
+#         tumor_size = findings["area_px"]
+
+#         # Collect structured facts
+#         facts = {
+#             "case_id": str(uuid.uuid4())[:8],
+#             "patient": {
+#                 "patient_id": patient_id,
+#                 "name": patient_name,
+#                 "age": patient_age,
+#                 "sex": patient_sex
+#             },
+#             "study": {
+#                 "modality": "MRI",
+#                 "study_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#             },
+#             "classification": classification,
+#             "plane": plane,
+#             "findings_extracted": findings,
+#             "quality_flags": {
+#                 "mask_empty": mask.sum() == 0,
+#                 "image_nan": bool(np.isnan(img_gray).any())
+#             },
+#             "result_summary": result_summary,
+#             "tumor_type": tumor_type,
+#             "tumor_size": tumor_size
+#         }
+
+#         if facts["quality_flags"]["image_nan"]:
+#             raise ValueError("Image contains NaNs.")
+
+#         # ✅ Generate narrative summary using Gemini
+#         prompt = f"""
+#         Generate a clear, medically-oriented but patient-friendly report summary 
+#         for the following brain MRI findings:
+
+#         Patient ID: {patient_id}
+#         Name: {patient_name}
+#         Age: {patient_age}, Sex: {patient_sex}
+#         Tumor Type: {tumor_type}
+#         Tumor Size (px area): {tumor_size}
+#         MRI Plane: {plane}
+#         Extracted Findings: {findings}
+#         AI Result Summary: {result_summary}
+
+#         Please summarize in a professional radiology style (2-3 paragraphs).
+#         """
+#         gemini_response = gemini_model.generate_content(prompt)
+#         narrative_summary = gemini_response.text.strip()
+
+#         # Overlay with tumor mask
+#         overlay = overlay_mask(img_gray, mask, alpha=0.35)
+#         with tempfile.NamedTemporaryFile(suffix="_overlay.png", delete=False) as ov:
+#             ov_path = Path(ov.name)
+#             skio.imsave(str(ov_path), overlay)
+
+#         # ✅ Merge Gemini summary into PDF facts
+#         facts["gemini_summary"] = narrative_summary
+
+#         pdf_bytes = render_pdf_bytes(facts, ov_path)
+#         ov_path.unlink(missing_ok=True)
+
+#         return pdf_bytes, {
+#             "tumor_type": tumor_type,
+#             "tumor_size": tumor_size,
+#             "gemini_summary": narrative_summary
+#         }
+
+#     finally:
+#         tmp_path.unlink(missing_ok=True)
+
+
+def render_pdf_bytes(facts: dict, overlay_path: Path) -> bytes:
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("<b>Brain Tumor Report</b>", styles["Title"]))
+    story.append(Spacer(1, 12))
+
+    # Patient Info
+    p = facts["patient"]
+    story.append(Paragraph(f"Patient ID: {p['patient_id']}", styles["Normal"]))
+    story.append(Paragraph(f"Name: {p['name']}", styles["Normal"]))
+    story.append(Paragraph(f"Age: {p['age']}, Sex: {p['sex']}", styles["Normal"]))
+    story.append(Spacer(1, 12))
+
+    # Results
+    story.append(Paragraph(f"Result Summary: {facts['result_summary']}", styles["Normal"]))
+    story.append(Paragraph(f"Tumor Type: {facts['tumor_type']}", styles["Normal"]))
+    story.append(Paragraph(f"Tumor Size: {facts['tumor_size']} px", styles["Normal"]))
+    story.append(Paragraph(f"MRI Plane: {facts['plane']}", styles["Normal"]))
+    story.append(Spacer(1, 12))
+
+    # Gemini Summary
+    story.append(Paragraph("<b>AI Narrative Summary</b>", styles["Heading2"]))
+    story.append(Paragraph(facts["gemini_summary"], styles["Normal"]))
+    story.append(Spacer(1, 12))
+
+    # Overlay Image
+    story.append(Paragraph("<b>Overlay Image</b>", styles["Heading2"]))
+    story.append(RLImage(str(overlay_path), width=400, height=400))
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+def build_summary_pdf(metadata: dict) -> bytes:
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("<b>Summary Report</b>", styles["Title"]))
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph(f"Tumor Type: {metadata['tumor_type']}", styles["Normal"]))
+    story.append(Paragraph(f"Tumor Size: {metadata['tumor_size']} px", styles["Normal"]))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph("<b>Narrative:</b>", styles["Heading2"]))
+    story.append(Paragraph(metadata["gemini_summary"], styles["Normal"]))
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+# ---- Main Builder ----
 def build_report_pdf(image_bytes: bytes,
                      result_summary: str,
                      patient_id: str="Unknown",
@@ -298,88 +470,52 @@ def build_report_pdf(image_bytes: bytes,
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
         tmp.write(image_bytes)
         tmp_path = Path(tmp.name)
+
     try:
         seg_model, cls_model, plane_model = load_models()
 
         # Segmentation
         img_gray = load_image_gray_from_path(tmp_path)
         mask = infer_mask_from_unet(seg_model, img_gray,
-                                    seg_output_channel=SEG_OUTPUT_CHANNEL_TUMOR,
+                                    seg_output_channel=1,
                                     thresh=0.5)
         mask = morphology.remove_small_objects(mask.astype(bool), min_size=25).astype(np.uint8)
 
-        # Classification (tumor type)
-        classification = classify_with_vgg(cls_model, tmp_path, CLASS_NAMES, CLS_INPUT_SIZE)
+        # Classification
+        classification = classify_with_vgg(cls_model, tmp_path, ["Glioma", "Meningioma", "Pituitary"], (224, 224))
         tumor_type = classification["predicted_label"]
 
-        # ✅ Map back from class index if needed
-        if tumor_type.startswith("class_"):
-            idx = int(tumor_type.split("_")[1])
-            if idx < len(CLASS_NAMES):
-                tumor_type = CLASS_NAMES[idx]
-
         # Plane classification
-        plane = classify_plane(plane_model, tmp_path, PLANE_NAMES, PLANE_INPUT_SIZE)
+        plane = classify_plane(plane_model, tmp_path, ["Axial", "Coronal", "Sagittal"], (224, 224))
 
         # Tumor size
         findings = compute_mask_metrics(img_gray, mask)
         tumor_size = findings["area_px"]
 
-        # Collect structured facts
-        facts = {
-            "case_id": str(uuid.uuid4())[:8],
-            "patient": {
-                "patient_id": patient_id,
-                "name": patient_name,
-                "age": patient_age,
-                "sex": patient_sex
-            },
-            "study": {
-                "modality": "MRI",
-                "study_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            },
-            "classification": classification,
-            "plane": plane,
-            "findings_extracted": findings,
-            "quality_flags": {
-                "mask_empty": mask.sum() == 0,
-                "image_nan": bool(np.isnan(img_gray).any())
-            },
-            "result_summary": result_summary,
-            "tumor_type": tumor_type,
-            "tumor_size": tumor_size
-        }
-
-        if facts["quality_flags"]["image_nan"]:
-            raise ValueError("Image contains NaNs.")
-
-        # ✅ Generate narrative summary using Gemini
+        # Narrative summary
         prompt = f"""
-        Generate a clear, medically-oriented but patient-friendly report summary 
-        for the following brain MRI findings:
-
-        Patient ID: {patient_id}
-        Name: {patient_name}
-        Age: {patient_age}, Sex: {patient_sex}
-        Tumor Type: {tumor_type}
-        Tumor Size (px area): {tumor_size}
-        MRI Plane: {plane}
-        Extracted Findings: {findings}
-        AI Result Summary: {result_summary}
-
-        Please summarize in a professional radiology style (2-3 paragraphs).
+        Patient: {patient_name} ({patient_id}), Age {patient_age}, Sex {patient_sex}
+        Tumor: {tumor_type}, Size {tumor_size}, Plane {plane}
+        Result: {result_summary}
         """
         gemini_response = gemini_model.generate_content(prompt)
         narrative_summary = gemini_response.text.strip()
 
-        # Overlay with tumor mask
+        # Overlay
         overlay = overlay_mask(img_gray, mask, alpha=0.35)
         with tempfile.NamedTemporaryFile(suffix="_overlay.png", delete=False) as ov:
             ov_path = Path(ov.name)
             skio.imsave(str(ov_path), overlay)
 
-        # ✅ Merge Gemini summary into PDF facts
-        facts["gemini_summary"] = narrative_summary
+        # Facts
+        facts = {
+            "patient": {"patient_id": patient_id, "name": patient_name, "age": patient_age, "sex": patient_sex},
+            "result_summary": result_summary,
+            "tumor_type": tumor_type,
+            "tumor_size": tumor_size,
+            "plane": plane,
+            "gemini_summary": narrative_summary
+        }
 
         pdf_bytes = render_pdf_bytes(facts, ov_path)
         ov_path.unlink(missing_ok=True)
@@ -389,6 +525,5 @@ def build_report_pdf(image_bytes: bytes,
             "tumor_size": tumor_size,
             "gemini_summary": narrative_summary
         }
-
     finally:
         tmp_path.unlink(missing_ok=True)
