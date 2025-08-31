@@ -174,26 +174,48 @@
       feedbackText.value = "";
     }
 
-    function submitFeedback() {
-      const feedback = feedbackText.value.trim();
-      if (feedback === "") {
-        alert("Please enter some feedback before submitting.");
-        return;
-      }
+   function submitFeedback() {
+    const feedback = feedbackText.value && feedbackText.value.trim() !== "" 
+      ? feedbackText.value.trim() 
+      : "hello";
 
-      fetch('/submit_feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feedback })
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert("✅ Feedback submitted successfully!");
-      })
-      .catch(err => console.error("❌ Error:", err));
+    const patient_id = localStorage.getItem("patient_id") 
+      ? localStorage.getItem("patient_id") 
+      : "patient1";
 
-      closeFeedback();
+
+  if (!feedback) {
+    alert("⚠ Please enter some feedback before submitting.");
+    return;
+  }
+  if (!patient_id) {
+    alert("⚠ Patient ID not found. Please log in again.");
+    return;
+  }
+
+
+
+  
+  fetch('http://127.0.0.1:5000/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      patient_id: patient_id,
+      message: feedback
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.error) {
+      alert("❌ " + data.error);
+    } else {
+      alert("✅ Feedback submitted successfully!");
     }
+  })
+  .catch(err => console.error("❌ Error:", err));
+
+  closeFeedback();
+}
 
     // Close modal if clicked outside
     window.onclick = function(event) {

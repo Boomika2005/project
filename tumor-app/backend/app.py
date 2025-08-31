@@ -68,7 +68,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
+# init_db()
 
 # -------------------- ROUTES ----------------------
 
@@ -193,6 +193,8 @@ def feedback():
     data = request.get_json()
     patient_id = data.get("patient_id")
     message = data.get("message")
+    print(data,patient_id)
+    print('reacher here')
 
     if not patient_id or not message:
         return jsonify({"error": "Patient ID and message are required"}), 400
