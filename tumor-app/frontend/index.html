@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -28,5 +28,141 @@
       <span>Prototype UI/UX • For demo purposes</span>
     </footer>
   </div>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Brain Tumor Report – Home</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Chatbot styles */
+    #chatbot-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+    }
+    #chat-window {
+      display: none;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 300px;
+      height: 400px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+      overflow: hidden;
+      flex-direction: column;
+    }
+    #chat-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    #chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+    #chat-input input {
+      flex: 1;
+      border: none;
+      padding: 10px;
+    }
+    #chat-input button {
+      border: none;
+      background: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap landing-center">
+    <header class="landing-header">
+      <h1>Brain Tumor Report Generation</h1>
+      <p class="landing-subtitle">
+        A simple tool to assist in brain tumor analysis and report generation.
+      </p>
+    </header>
+
+    <div class="landing-card">
+      <div class="landing-bullets">
+        <div>• Upload MRI (JPG)</div>
+        <div>• Get Prediction</div>
+        <div>• Download Report</div>
+      </div>
+      <a class="cta" href="report.html">Get Started</a>
+    </div>
+
+    <footer class="landing-footer">
+      <span>Prototype UI/UX • For demo purposes</span>
+    </footer>
+  </div>
+
+  <!-- Chatbot -->
+  <button id="chatbot-btn">💬</button>
+  <div id="chat-window" class="flex">
+    <div id="chat-messages"></div>
+    <div id="chat-input">
+      <input type="text" id="user-msg" placeholder="Type a message..." />
+      <button onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <script>
+    const chatbotBtn = document.getElementById("chatbot-btn");
+    const chatWindow = document.getElementById("chat-window");
+    const chatMessages = document.getElementById("chat-messages");
+    const userMsgInput = document.getElementById("user-msg");
+
+    chatbotBtn.addEventListener("click", () => {
+      chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
+    });
+
+    function addMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.innerHTML = `<b>${sender}:</b> ${text}`;
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const msg = userMsgInput.value.trim();
+      if (!msg) return;
+      addMessage("You", msg);
+      userMsgInput.value = "";
+
+      try {
+        console.log("abcd",msg)
+        const res = await fetch("http://127.0.0.1:5000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg })
+        });
+        console.log('heeee')
+        const data = await res.json();
+        addMessage("Gemini", data.reply || "❌ Error occurred");
+      } catch (err) {
+        addMessage("System", "❌ Failed to connect to server.");
+      }
+    }
+  </script>
 </body>
 </html>
