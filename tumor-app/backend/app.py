@@ -151,7 +151,12 @@ def predict():
 
     try:
         # Fetch patient info from DB
-        conn = mysql.connector.connect() #need to  configure
+        conn = mysql.connector.connect(
+            host=DB_CONFIG["host"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+            database="tumor_app"
+        ) #need to  configure
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT name, age, sex FROM patients WHERE patient_id = %s", (patient_id,))
         patient = cursor.fetchone()
