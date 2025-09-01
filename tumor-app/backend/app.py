@@ -100,20 +100,20 @@ def home():
 
 
 @app.route("/login", methods=["GET"])
-def login():
+def login_get():
     return render_template("login.html")
 
 
 @app.route("/register", methods=["GET"])
-def register():
+def register_get():
     return render_template("register.html")
 
 @app.route("/report", methods=["GET"])
-def report():
+def report_get():
     return render_template("report.html")
 
 @app.route("/index", methods=["GET"])
-def index():
+def index_get():
     return render_template("index.html")
 
 
@@ -123,7 +123,7 @@ def index():
 
 # -------- Register --------
 @app.route("/register", methods=["POST"])
-def register():
+def register_post():
     data = request.json
     patient_id = data.get("patient_id")
     name = data.get("name")
@@ -147,7 +147,7 @@ def register():
 
 # -------- Login --------
 @app.route("/login", methods=["POST"])
-def login():
+def login_post():
     data = request.json
     patient_id = data.get("patient_id")
     password = data.get("password")
@@ -241,7 +241,7 @@ def login():
 
 
 @app.route("/predict", methods=["POST"])
-def predict():
+def predict_post():
     if "image" not in request.files:
         return jsonify({"error": "No file part named 'image'"}), 400
 
@@ -324,7 +324,7 @@ def predict():
 
 # -------- Feedback --------
 @app.route("/feedback", methods=["POST"])
-def feedback():
+def feedback_post():
     data = request.get_json()
     patient_id = data.get("patient_id")
     message = data.get("message")
@@ -357,7 +357,7 @@ def feedback():
 
 
 @app.route("/chat", methods=["POST"])
-def chat():
+def chat_post():
     
     global model
     print("message from frontend")
