@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brain Tumor Report Generation - Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+    url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiZJxMP9tgGHU_N2AnPTFWYA8s2QqztspEEA&s") no-repeat center center fixed;
+  background-size: cover;
+}
+
+  
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center overlay text-white">
+
+  <!-- Header -->
+  <h1 class="text-4xl font-bold mb-10 text-center">
+    Welcome to <span class="text-blue-400">Brain Tumor Report Generation</span>
+  </h1>
+
+  <!-- Two Boxes -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-11/12 max-w-4xl">
+    
+    <!-- New Users -->
+    <div class="bg-gray-700 bg-opacity-80 rounded-2xl shadow-xl p-8 flex flex-col items-center text-center hover:scale-105 transition">
+      <h2 class="text-2xl font-semibold mb-4">🆕 New Users</h2>
+      <p class="mb-6 text-gray-300">Register your details and upload MRI scans to get started.</p>
+      <a href="register.html" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl shadow-md">Register</a>
+    </div>
+
+    <!-- Registered Patients -->
+    <div class="bg-gray-700 bg-opacity-80 rounded-2xl shadow-xl p-8 flex flex-col items-center text-center hover:scale-105 transition">
+      <h2 class="text-2xl font-semibold mb-4">👩‍⚕️ Already Registered</h2>
+      <p class="mb-6 text-gray-300">Log in to view your reports and download predictions.</p>
+      <a href="index.html" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl shadow-md">Login</a>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <p class="text-gray-400 mt-12 text-sm">© 2025 Brain Tumor Report System. For demo purposes only.</p>
+
+</body>
+</html>

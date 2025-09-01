@@ -3,7 +3,7 @@ from report_generator import build_report_pdf, build_summary_pdf
 import io
 import mysql.connector
 from datetime import datetime
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 from flask_cors import CORS
 import google.generativeai as genai
 from flask import Flask, request, jsonify, send_file
@@ -90,6 +90,13 @@ def init_db():
 def health():
     return jsonify({"status": "ok"}), 200
 
+
+#------------------------all get folder ---------------------
+
+
+@app.route("/", methods=["GET"])
+def home():
+    return render_template("home.html")
 
 # -------- Register --------
 @app.route("/register", methods=["POST"])
