@@ -94,9 +94,13 @@ def health():
 #------------------------all get folder ---------------------
 
 
-@app.route("/", methods=["GET"])
+# @app.route("/", methods=["GET"])
+# def home():
+#     return render_template("home.html")
+
+@app.route("/")
 def home():
-    return render_template("home.html")
+    return "Hello, World!"
 
 # -------- Register --------
 @app.route("/register", methods=["POST"])
