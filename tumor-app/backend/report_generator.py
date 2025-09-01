@@ -632,7 +632,7 @@
 # report_generator.py
 # Backend version with patient details in PDF
 
-from _future_ import annotations
+from __future__ import annotations
 import os, uuid, datetime, tempfile
 from pathlib import Path
 from typing import Tuple, Optional
