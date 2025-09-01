@@ -146,7 +146,7 @@ if (predictBtn) {
       form.append('image', file);
       form.append('patient_id', patientId);
 
-      const resp = await fetch(`${API_BASE}/predict`, {
+      const resp = await fetch(`${API_BASE}/predict_post`, {
         method: 'POST',
         body: form
       });

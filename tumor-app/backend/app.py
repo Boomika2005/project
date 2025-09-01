@@ -100,20 +100,20 @@ def home():
 
 
 @app.route("/login", methods=["GET"])
-def login_get():
+def login():
     return render_template("login.html")
 
 
 @app.route("/register", methods=["GET"])
-def register_get():
+def register():
     return render_template("register.html")
 
 @app.route("/report", methods=["GET"])
-def report_get():
+def report():
     return render_template("report.html")
 
 @app.route("/index", methods=["GET"])
-def index_get():
+def index():
     return render_template("index.html")
 
 
@@ -122,7 +122,7 @@ def index_get():
 #     return "Hello, World!"
 
 # -------- Register --------
-@app.route("/register", methods=["POST"])
+@app.route("/register_post", methods=["POST"])
 def register_post():
     data = request.json
     patient_id = data.get("patient_id")
@@ -146,7 +146,7 @@ def register_post():
 
 
 # -------- Login --------
-@app.route("/login", methods=["POST"])
+@app.route("/login_post", methods=["POST"])
 def login_post():
     data = request.json
     patient_id = data.get("patient_id")
@@ -240,7 +240,7 @@ def login_post():
 
 
 
-@app.route("/predict", methods=["POST"])
+@app.route("/predict_post", methods=["POST"])
 def predict_post():
     if "image" not in request.files:
         return jsonify({"error": "No file part named 'image'"}), 400
@@ -323,7 +323,7 @@ def predict_post():
         return jsonify({"error": f"Processing failed: {str(e)}"}), 500
 
 # -------- Feedback --------
-@app.route("/feedback", methods=["POST"])
+@app.route("/feedback_post", methods=["POST"])
 def feedback_post():
     data = request.get_json()
     patient_id = data.get("patient_id")
@@ -356,7 +356,7 @@ def feedback_post():
 
 
 
-@app.route("/chat", methods=["POST"])
+@app.route("/chat_post", methods=["POST"])
 def chat_post():
     
     global model
