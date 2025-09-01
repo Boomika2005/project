@@ -8,7 +8,7 @@ from flask_cors import CORS
 import google.generativeai as genai
 from flask import Flask, request, jsonify, send_file
 # import mysql.connector
-import mysql.connector.pooling
+from mysql.connector import pooling
 import zipfile
 
 app = Flask(__name__)
