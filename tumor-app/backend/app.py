@@ -1,4 +1,5 @@
 # app.py
+import logging
 from report_generator import build_report_pdf, build_summary_pdf
 import io
 import mysql.connector
@@ -11,9 +12,33 @@ from flask import Flask, request, jsonify, send_file
 from mysql.connector import pooling
 import zipfile
 
+logging.basicConfig(level=logging.INFO)
+
 app = Flask(__name__)
 CORS(app)
 model=None
+
+# DB_CONFIG = {
+#     "host": "34.93.58.125",
+#     "user": "root",
+#     "password": "Boomika123#",
+#     "database": "tumor_app"
+# }
+
+# try:
+#     pool = pooling.MySQLConnectionPool(
+#         pool_name="mypool",
+#         pool_size=3,
+#         host=DB_CONFIG["host"], 
+#         user=DB_CONFIG["user"], 
+#         password=DB_CONFIG["password"], 
+#         database=DB_CONFIG["database"]
+#     )
+#     print("DB pool created successfully")
+# except mysql.connector.Error as err:
+#     print("Error creating DB pool:", err)
+#     pool = None
+
 
 DB_CONFIG = {
     "host": "34.93.58.125",
@@ -31,10 +56,11 @@ try:
         password=DB_CONFIG["password"], 
         database=DB_CONFIG["database"]
     )
-    print("DB pool created successfully")
+    logging.info("DB pool created successfully")
 except mysql.connector.Error as err:
-    print("Error creating DB pool:", err)
+    logging.error(f"Error creating DB pool: {err}")
     pool = None
+
 def connect():
     global model
     API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
