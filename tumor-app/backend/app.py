@@ -100,20 +100,20 @@ def home():
 
 
 @app.route("/login", methods=["GET"])
-def login1():
+def login():
     return render_template("login.html")
 
 
 @app.route("/register", methods=["GET"])
-def register1():
+def register():
     return render_template("register.html")
 
 @app.route("/report", methods=["GET"])
-def report1():
+def report():
     return render_template("report.html")
 
 @app.route("/index", methods=["GET"])
-def index1():
+def index():
     return render_template("index.html")
 
 
