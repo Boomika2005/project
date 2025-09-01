@@ -98,6 +98,25 @@ def health():
 def home():
     return render_template("home.html")
 
+
+@app.route("/login", methods=["GET"])
+def home():
+    return render_template("login.html")
+
+
+@app.route("/register", methods=["GET"])
+def home():
+    return render_template("register.html")
+
+@app.route("/report", methods=["GET"])
+def home():
+    return render_template("report.html")
+
+@app.route("/index", methods=["GET"])
+def home():
+    return render_template("index.html")
+
+
 # @app.route("/")
 # def home():
 #     return "Hello, World!"

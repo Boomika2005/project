@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Brain Tumor Report Generation</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Feedback button */
+    .feedback-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: background 0.2s ease-in-out;
+      z-index: 1000;
+    }
+
+    .feedback-btn:hover {
+      background-color: #1e40af;
+    }
+
+    /* Modal background */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    /* Modal content */
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .modal-content textarea {
+      width: 100%;
+      height: 100px;
+      padding: 8px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      resize: none;
+    }
+
+    .modal-content button {
+      margin-top: 12px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .submit-btn {
+      background: #2563eb;
+      color: white;
+    }
+
+    .submit-btn:hover {
+      background: #1e40af;
+    }
+
+    .close-btn {
+      background: #ccc;
+      margin-left: 8px;
+    }
+
+    .close-btn:hover {
+      background: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="mini-nav">
+      <a href="index.html" class="mini-link">← Back to Home</a>
+    </nav>
+
+    <header>
+      <h1>Brain Tumor Report Generation</h1>
+      <div class="subtitle">Upload MRI (JPG). Get prediction. Download report.</div>
+    </header>
+
+    <section class="card">
+      <div class="upload-box" id="dropZone">
+        <div class="upload-icon" aria-hidden="true">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20 16v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <p class="upload-text">
+          Drop your <strong>image</strong> here or <span class="browse" id="browseLink">browse</span>.
+        </p>
+        <p class="file-note">Only JPG/JPEG File</p>
+
+        <label class="upload-btn">
+          Select Image
+          <input id="fileInput" type="file" accept=".jpg,.jpeg" hidden />
+        </label>
+
+        <div class="progress" id="progress">
+          <div class="bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div>
+          <div class="preview-wrap">
+            <img id="preview" class="preview" alt="Uploaded MRI preview" />
+            <div id="emptyState" class="empty">No image selected yet.</div>
+          </div>
+
+          <div class="actions">
+            <button id="predictBtn" class="btn" disabled>Predict</button>
+            <div id="genState" class="success"><span class="pill">Report generated</span></div>
+            <button id="downloadReportBtn" class="btn" style="display:none;">Download Report</button>
+            <button id="downloadSummaryPdfBtn" class="btn" style="display:none;">Download Gemini Report</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Feedback Button -->
+  <button class="feedback-btn" id="feedbackBtn" aria-label="Give Feedback">Feedback</button>
+
+  <!-- Feedback Modal -->
+  <div id="feedbackModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <h2>Submit Feedback</h2>
+      <textarea id="feedbackText" placeholder="Enter your feedback..." maxlength="500"></textarea>
+      <br />
+      <button class="submit-btn" onclick="submitFeedback()">Submit</button>
+      <button class="close-btn" onclick="closeFeedback()">Close</button>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+ 
+  <script src="script.js"></script>
+  <script>
+    const feedbackBtn = document.getElementById("feedbackBtn");
+    const feedbackModal = document.getElementById("feedbackModal");
+    const feedbackText = document.getElementById("feedbackText");
+
+    feedbackBtn.onclick = function() {
+      feedbackModal.style.display = "flex";
+      feedbackText.focus();
+    }
+
+    function closeFeedback() {
+      feedbackModal.style.display = "none";
+      feedbackText.value = "";
+    }
+
+    function submitFeedback() {
+      const feedback = feedbackText.value && feedbackText.value.trim() !== "" 
+        ? feedbackText.value.trim() 
+        : "hello";
+
+      const patient_id = localStorage.getItem("patient_id") 
+        ? localStorage.getItem("patient_id") 
+        : "patient1";
+
+      if (!feedback) {
+        alert("⚠ Please enter some feedback before submitting.");
+        return;
+      }
+      if (!patient_id) {
+        alert("⚠ Patient ID not found. Please log in again.");
+        return;
+      }
+
+      fetch('http://127.0.0.1:5000/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id: patient_id,
+          message: feedback
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("❌ " + data.error);
+        } else {
+          alert("✅ Feedback submitted successfully!");
+        }
+      })
+      .catch(err => console.error("❌ Error:", err));
+
+      closeFeedback();
+    }
+
+    // Close modal if clicked outside
+    window.onclick = function(event) {
+      if (event.target === feedbackModal) {
+        closeFeedback();
+      }
+    }
+
+    // Close modal with ESC key
+    window.addEventListener("keydown", function(e) {
+      if (e.key === "Escape" && feedbackModal.style.display === "flex") {
+        closeFeedback();
+      }
+    });
+  </script>
+</body>
+</html>
