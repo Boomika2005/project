@@ -375,20 +375,20 @@ def chat():
 
 
 
-@app.route("/feedback", methods=["GET"])
-def get_feedback():
-    conn = mysql.connector.connect(    
-        host=DB_CONFIG["host"],
-        user=DB_CONFIG["user"],
-        password=DB_CONFIG["password"]
-        )
-    cursor = conn.cursor(dictionary=True)
-    conn.database = "tumor_app"
-    cursor.execute("SELECT * FROM feedback")
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify(rows)
+# @app.route("/feedback", methods=["GET"])
+# def get_feedback():
+#     conn = mysql.connector.connect(    
+#         host=DB_CONFIG["host"],
+#         user=DB_CONFIG["user"],
+#         password=DB_CONFIG["password"]
+#         )
+#     cursor = conn.cursor(dictionary=True)
+#     conn.database = "tumor_app"
+#     cursor.execute("SELECT * FROM feedback")
+#     rows = cursor.fetchall()
+#     cursor.close()
+#     conn.close()
+#     return jsonify(rows)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 // ===== Backend base URL (adjust if needed) =====
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = "http://34.72.251.129";
 
 // ===== Elements =====
 const fileInput   = document.getElementById('fileInput');
