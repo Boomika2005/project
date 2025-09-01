@@ -132,7 +132,11 @@ def register_post():
     password = data.get("password")
 
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = mysql.connector.connect( 
+            host=DB_CONFIG["host"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+            database=DB_CONFIG['database'])
         cursor = conn.cursor()
         query = "INSERT INTO patients (patient_id, name, age, sex, password) VALUES (%s, %s, %s, %s, %s)"
         cursor.execute(query, (patient_id, name, age, sex, password))
@@ -152,7 +156,11 @@ def login_post():
     patient_id = data.get("patient_id")
     password = data.get("password")
 
-    conn = mysql.connector.connect(**DB_CONFIG)
+    conn = mysql.connector.connect( 
+            host=DB_CONFIG["host"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+            database=DB_CONFIG['database'])
     cursor = conn.cursor(dictionary=True)
     query = "SELECT * FROM patients WHERE patient_id=%s AND password=%s"
     cursor.execute(query, (patient_id, password))
@@ -291,7 +299,11 @@ def predict_post():
         summary = metadata["gemini_summary"]
 
         # Save prediction into DB
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = mysql.connector.connect( 
+            host=DB_CONFIG["host"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+            database=DB_CONFIG['database'])
         cursor = conn.cursor()
         cursor.execute(
             """
