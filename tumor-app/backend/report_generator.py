@@ -413,7 +413,7 @@ def render_pdf_bytes(facts: dict, overlay_path: Path | None) -> bytes:
     W, H = A4
     m = 15 * mm
     y = H - m
-
+    story=[]
     # Results
     # story.append(Paragraph(f"Result Summary: {facts['result_summary']}", styles["Normal"]))
     story.append(Paragraph(f"Tumor Type: {facts['tumor_type']}", styles["Normal"]))
