@@ -23,3 +23,6 @@ TestResults.xml
 
 tumor-app/backend/models/
 tumor-app/backend/venv/
+
+tumor-app/backend/__pycache__/
+
