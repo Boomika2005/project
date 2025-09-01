@@ -13,6 +13,23 @@ import zipfile
 app = Flask(__name__)
 CORS(app)
 model=None
+
+DB_CONFIG = {
+    "host": "34.93.58.125",
+    "user": "root",          # change if needed
+    "password": "Boomika123#",  # change if needed
+    "database": "tumor_app"
+}
+
+pool = mysql.connector.pooling.MySQLConnectionPool(
+    pool_name="mypool",
+    pool_size=5,
+    host=DB_CONFIG["host"],
+    user=DB_CONFIG["user"],
+    password=DB_CONFIG["password"],
+    database=DB_CONFIG["database"]
+)
+
 def connect():
     global model
     API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
@@ -24,12 +41,6 @@ def connect():
 
 connect()
 # -------------------- DATABASE --------------------
-DB_CONFIG = {
-    "host": "34.93.58.125",
-    "user": "root",          # change if needed
-    "password": "Boomika123#",  # change if needed
-    "database": "tumor_app"
-}
 
 def init_db():
     conn = mysql.connector.connect(
@@ -124,6 +135,7 @@ def index():
 # -------- Register --------
 @app.route("/register_post", methods=["POST"])
 def register_post():
+    global pool
     data = request.json
     patient_id = data.get("patient_id")
     name = data.get("name")
@@ -132,12 +144,14 @@ def register_post():
     password = data.get("password")
 
     try:
-        conn = mysql.connector.connect( 
-            host=DB_CONFIG["host"],
-            user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
-            database=DB_CONFIG['database'])
+        # conn = mysql.connector.connect( 
+        #     host=DB_CONFIG["host"],
+        #     user=DB_CONFIG["user"],
+        #     password=DB_CONFIG["password"],
+        #     database=DB_CONFIG['database'])
+        conn=pool.get_connection()
         cursor = conn.cursor()
+
         query = "INSERT INTO patients (patient_id, name, age, sex, password) VALUES (%s, %s, %s, %s, %s)"
         cursor.execute(query, (patient_id, name, age, sex, password))
         conn.commit()
@@ -152,15 +166,17 @@ def register_post():
 # -------- Login --------
 @app.route("/login_post", methods=["POST"])
 def login_post():
+    global pool
     data = request.json
     patient_id = data.get("patient_id")
     password = data.get("password")
 
-    conn = mysql.connector.connect( 
-            host=DB_CONFIG["host"],
-            user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
-            database=DB_CONFIG['database'])
+    # conn = mysql.connector.connect( 
+    #         host=DB_CONFIG["host"],
+    #         user=DB_CONFIG["user"],
+    #         password=DB_CONFIG["password"],
+    #         database=DB_CONFIG['database'])
+    conn=pool.get_connection()
     cursor = conn.cursor(dictionary=True)
     query = "SELECT * FROM patients WHERE patient_id=%s AND password=%s"
     cursor.execute(query, (patient_id, password))
@@ -250,6 +266,7 @@ def login_post():
 
 @app.route("/predict_post", methods=["POST"])
 def predict_post():
+    global poll
     if "image" not in request.files:
         return jsonify({"error": "No file part named 'image'"}), 400
 
@@ -265,19 +282,20 @@ def predict_post():
 
     try:
         # ---- Fetch patient info ----
-        conn = mysql.connector.connect(
-              host=DB_CONFIG["host"],
-             user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
-             database="tumor_app"
-        )
+        # conn = mysql.connector.connect(
+        #       host=DB_CONFIG["host"],
+        #      user=DB_CONFIG["user"],
+        #     password=DB_CONFIG["password"],
+        #      database="tumor_app"
+        # )
+        conn=pool.get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute(
             "SELECT name, age, sex FROM patients WHERE patient_id = %s",
             (patient_id,)
         )
         patient = cursor.fetchone()
-        conn.close()
+        # conn.close()
 
         if not patient:
             return jsonify({"error": "Patient not found"}), 404
@@ -299,12 +317,12 @@ def predict_post():
         summary = metadata["gemini_summary"]
 
         # Save prediction into DB
-        conn = mysql.connector.connect( 
-            host=DB_CONFIG["host"],
-            user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
-            database=DB_CONFIG['database'])
-        cursor = conn.cursor()
+        # conn = mysql.connector.connect( 
+        #     host=DB_CONFIG["host"],
+        #     user=DB_CONFIG["user"],
+        #     password=DB_CONFIG["password"],
+        #     database=DB_CONFIG['database'])
+        # cursor = conn.cursor()
         cursor.execute(
             """
             INSERT INTO predictions (patient_id, report_filename, result, tumor_type, tumor_size)
@@ -337,6 +355,7 @@ def predict_post():
 # -------- Feedback --------
 @app.route("/feedback_post", methods=["POST"])
 def feedback_post():
+    global pool
     data = request.get_json()
     patient_id = data.get("patient_id")
     message = data.get("message")
@@ -347,12 +366,13 @@ def feedback_post():
         return jsonify({"error": "Patient ID and message are required"}), 400
 
     try:
-        conn = mysql.connector.connect(    
-            host=DB_CONFIG["host"],
-            user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
-            database="tumor_app"
-        )
+        # conn = mysql.connector.connect(    
+        #     host=DB_CONFIG["host"],
+        #     user=DB_CONFIG["user"],
+        #     password=DB_CONFIG["password"],
+        #     database="tumor_app"
+        # )
+        conn=pool.get_connection()
         cursor = conn.cursor()
 
         query = "INSERT INTO feedback (patient_id, message) VALUES (%s, %s)"
