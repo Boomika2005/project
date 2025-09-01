@@ -23,7 +23,7 @@ DB_CONFIG = {
 
 pool = mysql.connector.pooling.MySQLConnectionPool(
     pool_name="mypool",
-    pool_size=5,
+    pool_size=3,
     host=DB_CONFIG["host"],
     user=DB_CONFIG["user"],
     password=DB_CONFIG["password"],
