@@ -16,20 +16,24 @@ model=None
 
 DB_CONFIG = {
     "host": "34.93.58.125",
-    "user": "root",          # change if needed
-    "password": "Boomika123#",  # change if needed
+    "user": "root",
+    "password": "Boomika123#",
     "database": "tumor_app"
 }
 
-pool = mysql.connector.pooling.MySQLConnectionPool(
-    pool_name="mypool",
-    pool_size=3,
-    host=DB_CONFIG["host"],
-    user=DB_CONFIG["user"],
-    password=DB_CONFIG["password"],
-    database=DB_CONFIG["database"]
-)
-
+try:
+    pool = pooling.MySQLConnectionPool(
+        pool_name="mypool",
+        pool_size=3,
+        host=DB_CONFIG["host"], 
+        user=DB_CONFIG["user"], 
+        password=DB_CONFIG["password"], 
+        database=DB_CONFIG["database"]
+    )
+    print("DB pool created successfully")
+except mysql.connector.Error as err:
+    print("Error creating DB pool:", err)
+    pool = None
 def connect():
     global model
     API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
