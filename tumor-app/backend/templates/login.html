@@ -75,7 +75,7 @@
 
       <button type="submit">Login</button>
     </form>
-    <p>New user? <a href="register.html">Register here</a></p>
+    <p>New user? <a href="{{ url_for('register') }}">Register here</a></p>
   </div>
 
   <script>
@@ -99,7 +99,7 @@
           alert("✅ Login successful!");
           // Save patient_id for later use
           localStorage.setItem("patient_id", payload.patient_id);
-          window.location.href = "index.html"; // redirect to main page
+          window.location.href = "{{ url_for('index') }}"; // redirect to main page
         } else {
           alert("❌ " + data.error);
         }

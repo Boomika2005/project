@@ -25,9 +25,9 @@ def connect():
 connect()
 # -------------------- DATABASE --------------------
 DB_CONFIG = {
-    "host": "localhost",
+    "host": "34.93.58.125",
     "user": "root",          # change if needed
-    "password": "Boomika236",  # change if needed
+    "password": "Boomika123#",  # change if needed
     "database": "tumor_app"
 }
 

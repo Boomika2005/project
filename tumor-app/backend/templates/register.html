@@ -89,7 +89,7 @@
 
       <button type="submit">Register</button>
     </form>
-    <p>Already registered? <a href="login.html">Login here</a></p>
+    <p>Already registered? <a href="{{ url_for('login') }}">Login here</a></p>
   </div>
 
   <script>
@@ -120,7 +120,7 @@
         const data = await res.json();
         if (res.ok) {
           alert("✅ Registration successful! Please login.");
-          window.location.href = "login.html";
+          window.location.href = "{{ url_for('login') }}";
         } else {
           alert("❌ " + data.error);
         }
