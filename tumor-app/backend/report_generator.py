@@ -30,7 +30,7 @@
 
 # import google.generativeai as genai
 
-# API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
+# API_KEY = ""
 # genai.configure(api_key=API_KEY)
 # gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 
@@ -660,7 +660,7 @@ from reportlab.lib.utils import ImageReader
 
 import google.generativeai as genai
 
-API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
+API_KEY = ""
 genai.configure(api_key=API_KEY)
 gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 

@@ -63,7 +63,7 @@ except mysql.connector.Error as err:
 
 def connect():
     global model
-    API_KEY = "AIzaSyCgd_bBl9vHKnU3BUXtYvhhT0pNyf6J6X8"
+    API_KEY = ""
     genai.configure(api_key=API_KEY)
 
     # Initialize Gemini model
