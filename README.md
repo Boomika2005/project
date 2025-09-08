@@ -1,4 +1,4 @@
-Brain Tumor Report Generator
+Brain Tumor Detection, Classification and Report Generator
 
 Web app to upload MRI (JPG), run segmentation + tumor/plane classifiers, and download a PDF report. Results are saved to MySQL. Optional Cloudinary for image URLs.
 
